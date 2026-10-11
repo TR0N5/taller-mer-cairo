@@ -148,7 +148,7 @@ code, pre { font-family: var(--mono); font-size: 0.85rem; }
 .diag-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
 .diag-head h3 { margin: 0; font-family: var(--display); font-size: 1.15rem; }
 .legend { font-size: 0.8rem; color: var(--muted); }
-.canvas { overflow: auto; border: 2px solid var(--line); border-radius: 8px; background: var(--code-bg); height: clamp(320px, 62vh, 640px); position: relative; }
+.canvas { overflow: auto; border: 2px solid var(--line); border-radius: 8px; background: var(--code-bg); height: clamp(280px, 50vh, 560px); position: relative; }
 .canvas svg { display: block; touch-action: none; }
 .canvas .empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--muted); }
 svg text { font-family: var(--mono); fill: var(--ink); }
@@ -165,6 +165,19 @@ svg text { font-family: var(--mono); fill: var(--ink); }
 .edge-mark { stroke: var(--blue); stroke-width: 2; fill: none; }
 .e-lab { font-size: 11px; font-weight: 600; fill: var(--blue); }
 g[data-t] .t-head { cursor: grab; }
+
+/* Relaciones en palabras y botín */
+.rels { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
+.rels li { padding: 6px 10px; border-left: 4px solid var(--blue); background: var(--code-bg); border-radius: 0 6px 6px 0; font-size: 0.92rem; }
+.rels li b { color: var(--blue); }
+.rels li code { color: var(--muted); font-size: 0.78rem; display: block; }
+.rels li em { font-style: normal; color: var(--muted); font-size: 0.8rem; }
+.rels .none { border-left-color: var(--line); color: var(--muted); }
+.loot { border-color: var(--accent); }
+.loot .sub { font-family: var(--display); font-size: 1.1rem; margin: 16px 0 8px; }
+.loot .rels { max-height: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.canvas.tall { height: clamp(360px, 70vh, 780px); margin-top: 12px; }
+.lootcode { width: 100%; height: 300px; margin-top: 8px; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; background: var(--code-bg); color: var(--ink); border: 2px solid var(--line); border-radius: 6px; padding: 10px; white-space: pre; resize: vertical; }
 
 /* Ranking */
 .rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -215,9 +228,9 @@ g[data-t] .t-head { cursor: grab; }
 @media (prefers-reduced-motion: reduce) { #confetti { display: none; } }
 </style>
 
-
 </head>
 <body>
+
 <div class="wrap">
   <header class="top">
     <div class="brand">
@@ -239,6 +252,7 @@ g[data-t] .t-head { cursor: grab; }
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-play" aria-selected="true">Misión</button>
       <button class="tab" role="tab" id="tab-rank" aria-selected="false">Ranking</button>
+      <button class="tab" role="tab" id="tab-loot" aria-selected="false" hidden>🎁 Botín</button>
     </div>
   </div>
 
@@ -272,8 +286,36 @@ g[data-t] .t-head { cursor: grab; }
           <div class="empty" id="empty">Escribe tu primera Table y aparecerá aquí.</div>
         </div>
       </section>
+      <section class="panel">
+        <div class="diag-head">
+          <h3>Tus relaciones</h3>
+          <span class="legend">Lee cada flecha en palabras</span>
+        </div>
+        <ul class="rels" id="rels" aria-live="polite"></ul>
+      </section>
     </div>
   </main>
+
+  <section class="panel loot" id="view-loot" hidden>
+    <p class="eyebrow">Botín de TRONS</p>
+    <h2>El MER completo de Cairo</h2>
+    <p class="story"><b>TRONS dice</b>Lo lograste. Esto es lo que reconstruiste: las 10 tablas de Cairo y sus 8 relaciones. Aquí está la versión oficial, con lo que no te pedí: created_at, updated_at, notas y borrado en cascada. Compárala con tu código y quédate con ella.</p>
+    <div class="actions">
+      <button class="btn primary" id="loot-dbml">Descargar tienda.dbml</button>
+      <button class="btn" id="loot-png">Descargar imagen (PNG)</button>
+      <button class="btn" id="loot-svg">Descargar SVG</button>
+      <button class="btn" id="loot-copy">Copiar el código</button>
+    </div>
+    <p class="status" id="loot-status" role="status"></p>
+    <div class="canvas tall" id="canvas-loot"><svg id="svg-loot" width="10" height="10"></svg></div>
+    <h3 class="sub">Las 8 relaciones, en palabras</h3>
+    <ul class="rels" id="rels-loot"></ul>
+    <details>
+      <summary>Ver el código DBML oficial</summary>
+      <p class="note">Pégalo en <b>dbdiagram.io</b> para verlo con su herramienta. Si tu navegador no deja descargar, selecciona y copia desde aquí.</p>
+      <textarea id="loot-code" class="lootcode" readonly spellcheck="false" aria-label="Código DBML oficial de Cairo"></textarea>
+    </details>
+  </section>
 
   <section class="panel" id="view-rank" hidden>
     <p class="eyebrow">Toda la clase</p>
@@ -309,6 +351,7 @@ g[data-t] .t-head { cursor: grab; }
           <li>Cada intento fallido de «Revisar» resta <b>3 puntos</b>. Lee los avisos en rojo.</li>
           <li>Las metas con ★ dan <b>+10 extra</b>. Si no pides ninguna pista, ganas otros <b>+10</b>.</li>
           <li>Todos ven el <b>ranking</b> de la clase. Elige un alias.</li>
+          <li>Si derrotas al jefe final, TRONS te entrega un <b>botín</b>: el diagrama completo de Cairo para llevártelo.</li>
         </ol>
       </div>
       <div class="enter" id="enter" hidden>
@@ -477,6 +520,135 @@ var PROD = "Table productos {\n  id bigint [pk, increment]\n  codigo varchar [un
 var PROV = "Table proveedores {\n  id bigint [pk, increment]\n  nombre varchar\n}\n";
 var COMPRAS = "Table compras {\n  id bigint [pk, increment]\n  proveedor_id bigint\n  fecha date\n  total_usd decimal(16,6)\n}\n";
 
+var LARAVEL = ["users", "password_reset_tokens", "sessions", "cache", "cache_locks", "jobs", "job_batches", "failed_jobs", "migrations"];
+var CAIRO = ["tasas", "productos", "proveedores", "compras", "compra_items", "pagos_proveedor", "clientes", "ventas", "venta_items", "cobros"];
+var MONEY = [["productos", "costo_usd"], ["productos", "precio_usd"], ["compras", "total_usd"], ["compra_items", "costo_usd"], ["pagos_proveedor", "monto_usd"],
+  ["ventas", "total_usd"], ["venta_items", "precio_usd"], ["cobros", "monto_usd"], ["cobros", "monto_pagado"], ["tasas", "valor"]];
+
+/* MER oficial de Cairo: el botín que se desbloquea al vencer al jefe (igual a solucion/database/tienda.dbml) */
+var OFICIAL = `// MER de la tienda - generado desde las migraciones de Laravel
+
+Table tasas {
+  id bigint [pk, increment]
+  fecha date [unique, note: 'una tasa por día']
+  valor decimal(14,4) [note: 'Bs por cada 1 $']
+  origen varchar(15) [default: 'manual', note: 'manual | automatica']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table productos {
+  id bigint [pk, increment]
+  codigo varchar [unique]
+  nombre varchar
+  costo_usd decimal(16,6) [default: 0]
+  precio_usd decimal(16,6)
+  stock int [default: 0]
+  stock_minimo int [default: 3]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table proveedores {
+  id bigint [pk, increment]
+  nombre varchar
+  empresa varchar [null]
+  telefono varchar [null]
+  direccion varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table compras {
+  id bigint [pk, increment]
+  proveedor_id bigint [not null]
+  fecha date
+  forma_pago varchar(10) [note: 'contado | credito']
+  vence date [null, note: 'fecha límite si es a crédito']
+  total_usd decimal(16,6)
+  tasa decimal(14,4) [note: 'tasa del día, congelada']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table compra_items {
+  id bigint [pk, increment]
+  compra_id bigint [not null]
+  producto_id bigint [not null]
+  cantidad int
+  costo_usd decimal(16,6) [note: 'costo unitario de esta compra']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table pagos_proveedor {
+  id bigint [pk, increment]
+  compra_id bigint [not null]
+  fecha date
+  monto_usd decimal(16,6)
+  metodo varchar(20) [note: 'efectivo_bs, efectivo_usd, pago_movil, biopago']
+  tasa decimal(14,4)
+  referencia varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table clientes {
+  id bigint [pk, increment]
+  nombre varchar
+  telefono varchar [null]
+  nota varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table ventas {
+  id bigint [pk, increment]
+  cliente_id bigint [null, note: 'null = venta a cliente ocasional']
+  fecha date
+  forma_pago varchar(10) [note: 'contado | credito']
+  total_usd decimal(16,6)
+  tasa decimal(14,4)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table venta_items {
+  id bigint [pk, increment]
+  venta_id bigint [not null]
+  producto_id bigint [not null]
+  cantidad int
+  precio_usd decimal(16,6) [note: 'precio de ese momento, congelado']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cobros {
+  id bigint [pk, increment]
+  venta_id bigint [not null]
+  fecha date
+  monto_usd decimal(16,6)
+  metodo varchar(20)
+  monto_pagado decimal(14,2) [note: 'lo entregado, en la moneda del cliente']
+  moneda varchar(3) [note: 'USD | BS']
+  tasa decimal(14,4)
+  referencia varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------- Relaciones ----------
+Ref: compras.proveedor_id > proveedores.id
+Ref: compra_items.compra_id > compras.id [delete: cascade]
+Ref: compra_items.producto_id > productos.id
+Ref: pagos_proveedor.compra_id > compras.id [delete: cascade]
+
+Ref: ventas.cliente_id > clientes.id
+Ref: venta_items.venta_id > ventas.id [delete: cascade]
+Ref: venta_items.producto_id > productos.id
+Ref: cobros.venta_id > ventas.id [delete: cascade]
+`;
+
 var LEVELS = [
 { n: 1, title: "Cairo abre sus puertas", who: "Cairo", max: 100, hc: [10, 20, 30],
   story: "Tengo mil cosas en cuadernos y ya no sé cuánto me queda de cada una. Necesito una tabla donde guardar mis productos: su código, su nombre, cuánto cuestan en dólares y cuántos quedan.",
@@ -526,25 +698,50 @@ var LEVELS = [
     opt("costo_usd es decimal", function (s) { return hasC(s, "compra_items", "costo_usd") && isDec(col(s, "compra_items", "costo_usd").type); }),
     opt("Borrar una compra borra sus renglones: [delete: cascade]", function (s) { return s.refs.some(function (r) { return r.many.t === "compra_items" && r.one.t === "compras" && r.cascade; }); })
   ] },
-{ n: 4, title: "El dólar subió y las ventas viejas cambiaron", who: "Cairo", max: 100, hc: [10, 20, 30],
-  story: "Ayer vendí harina a 2$. Hoy la subí a 3$ y mi reporte del mes pasado dice que vendí más de lo que vendí. ¡Eso es mentira! La venta vieja tiene que recordar el precio de ese día, y también la tasa del dólar.",
-  predict: { q: "¿Por qué guardamos precio_usd en venta_items si ya existe en productos?", a: "Porque productos.precio_usd cambia con el tiempo. La venta es una foto de ese momento: el precio y la tasa se congelan en la venta para que el pasado no se modifique." },
-  starter: PROD + "\n// Crea ventas y venta_items. Ojo con lo que debe quedar congelado\n",
-  hints: ["Si cambias el precio de un producto mañana, ¿qué precio debe seguir mostrando la venta de ayer?",
-          "venta_items guarda su propia copia del precio (precio_usd). ventas guarda la tasa del día (tasa) y el total.",
-          "Table ventas {\n  id bigint [pk, increment]\n  fecha date\n  total_usd decimal(16,6)\n  tasa decimal(14,4) [note: 'tasa del día, congelada']\n}\n\nTable venta_items {\n  id bigint [pk, increment]\n  venta_id bigint\n  producto_id bigint\n  cantidad int\n  precio_usd decimal(16,6) [note: 'precio de ese momento']\n}\n\nRef: venta_items.venta_id > ventas.id\nRef: venta_items.producto_id > productos.id\n"],
+{ n: 4, title: "Fiado con el proveedor", who: "Don Pepe", max: 100, hc: [10, 20, 30],
+  story: "Le fío la mercancía a Cairo: me paga a 15 días y a veces por partes. Cairo necesita anotar cuándo vence cada compra y cada abono que me hace, para saber cuánto me debe todavía.",
+  predict: { q: "Una compra a crédito, ¿cuántos pagos puede recibir? ¿Y un pago, a cuántas compras pertenece?", a: "Una compra puede recibir muchos pagos (abonos), pero cada pago es de una sola compra. Por eso la llave foránea va en el pago: pagos_proveedor.compra_id. Es el mismo molde de los cobros, pero del lado de lo que Cairo debe." },
+  starter: PROV + "\nTable compras {\n  id bigint [pk, increment]\n  proveedor_id bigint\n  fecha date\n  total_usd decimal(16,6)\n}\n\nRef: compras.proveedor_id > proveedores.id\n\n// 1) A compras agrégale forma_pago (contado | credito) y vence\n// 2) Crea pagos_proveedor para anotar cada abono\n",
+  hints: ["Dos cosas: la compra debe decir cómo se paga (forma_pago) y hasta cuándo (vence). Y cada abono es una fila nueva en otra tabla.",
+          "pagos_proveedor lleva compra_id (muchos pagos por compra), fecha, monto_usd y metodo. En compras, vence solo aplica al crédito: ¿acepta null?",
+          "// en compras agrega:\n//   forma_pago varchar(10)\n//   vence date [null]\n\nTable pagos_proveedor {\n  id bigint [pk, increment]\n  compra_id bigint\n  fecha date\n  monto_usd decimal(16,6)\n  metodo varchar(20)\n}\n\nRef: pagos_proveedor.compra_id > compras.id\n"],
   checks: [
+    colsOk("compras", ["forma_pago", "vence"]),
+    tableOk("pagos_proveedor"),
+    colsOk("pagos_proveedor", ["compra_id", "fecha", "monto_usd", "metodo"]),
+    typeOk("pagos_proveedor", "monto_usd", "dec", "monto_usd es decimal", "El dinero va en decimal, por ejemplo decimal(16,6)."),
+    refOk("pagos_proveedor", "compra_id", "compras"),
+    { text: "compras.vence permite null (las compras de contado no vencen)", run: function (s) {
+      if (!hasC(s, "compras", "vence")) return "compras necesita la columna vence.";
+      var c = col(s, "compras", "vence");
+      return c.null && !c.notnull ? true : "Marca vence con [null]: una compra de contado no tiene fecha límite.";
+    } },
+    opt("pagos_proveedor guarda tasa (se paga en bolívares)", function (s) { return hasC(s, "pagos_proveedor", "tasa"); }),
+    opt("pagos_proveedor tiene referencia (null) para el número de pago móvil", function (s) { return hasC(s, "pagos_proveedor", "referencia") && col(s, "pagos_proveedor", "referencia").null; }),
+    opt("Borrar una compra borra sus pagos: [delete: cascade]", function (s) { return s.refs.some(function (r) { return r.many.t === "pagos_proveedor" && r.one.t === "compras" && r.cascade; }); })
+  ] },
+{ n: 5, title: "El dólar subió y las ventas viejas cambiaron", who: "Cairo", max: 100, hc: [10, 20, 30],
+  story: "Cada día anoto a cuánto está el dólar: una tasa por día. Ayer vendí harina a 2$. Hoy la subí a 3$ y mi reporte del mes pasado dice que vendí más de lo que vendí. ¡Eso es mentira! La venta vieja tiene que recordar el precio de ese día y la tasa del dólar.",
+  predict: { q: "¿Por qué venta_items guarda su precio_usd y ventas su tasa, si ya existen en productos y en tasas?", a: "Porque productos.precio_usd y tasas.valor cambian con el tiempo. La venta es una foto de ese momento: copia el valor, no apunta a él. Por eso tasas no lleva flecha hacia ventas: es una tabla suelta que solo se consulta." },
+  starter: PROD + "\n// Crea tasas, ventas y venta_items. Ojo con lo que debe quedar congelado\n",
+  hints: ["Si cambias el precio de un producto mañana, ¿qué precio debe seguir mostrando la venta de ayer? ¿Y la tasa?",
+          "tasas guarda una fila por día (fecha única, valor). venta_items guarda su propia copia del precio (precio_usd). ventas guarda la tasa del día y el total.",
+          "Table tasas {\n  id bigint [pk, increment]\n  fecha date [unique]\n  valor decimal(14,4)\n}\n\nTable ventas {\n  id bigint [pk, increment]\n  fecha date\n  total_usd decimal(16,6)\n  tasa decimal(14,4) [note: 'tasa del día, congelada']\n}\n\nTable venta_items {\n  id bigint [pk, increment]\n  venta_id bigint\n  producto_id bigint\n  cantidad int\n  precio_usd decimal(16,6) [note: 'precio de ese momento']\n}\n\nRef: venta_items.venta_id > ventas.id\nRef: venta_items.producto_id > productos.id\n"],
+  checks: [
+    tableOk("tasas"), colsOk("tasas", ["fecha", "valor"]),
+    typeOk("tasas", "valor", "dec", "tasas.valor es decimal", "La tasa tiene decimales: usa decimal(14,4)."),
     tableOk("ventas"), tableOk("venta_items"),
     colsOk("ventas", ["fecha", "total_usd", "tasa"]),
     colsOk("venta_items", ["venta_id", "producto_id", "cantidad", "precio_usd"]),
     typeOk("venta_items", "precio_usd", "dec", "precio_usd (congelado) es decimal", "El precio congelado también es dinero: decimal."),
-    typeOk("ventas", "tasa", "dec", "tasa es decimal", "La tasa es un número con decimales: usa decimal(14,4)."),
+    typeOk("ventas", "tasa", "dec", "ventas.tasa es decimal", "La tasa es un número con decimales: usa decimal(14,4)."),
     refOk("venta_items", "venta_id", "ventas"),
     refOk("venta_items", "producto_id", "productos"),
+    opt("tasas.fecha es unique (una tasa por día)", function (s) { return hasC(s, "tasas", "fecha") && col(s, "tasas", "fecha").unique; }),
     opt("Explicaste con note por qué precio_usd o tasa se congelan", function (s) { return anyNote(s, "venta_items", ["precio_usd"]) || anyNote(s, "ventas", ["tasa"]); }),
     opt("Borrar una venta borra sus renglones: [delete: cascade]", function (s) { return s.refs.some(function (r) { return r.many.t === "venta_items" && r.one.t === "ventas" && r.cascade; }); })
   ] },
-{ n: 5, title: "Fiado: vender a crédito", who: "Cairo", max: 100, hc: [10, 20, 30],
+{ n: 6, title: "Fiado: vender a crédito", who: "Cairo", max: 100, hc: [10, 20, 30],
   story: "Algunos clientes me pagan por partes, y otros pasan una sola vez y ni dejan su nombre. Necesito saber quién me debe y cuánto me han abonado.",
   predict: { q: "Una venta a un cliente ocasional que no dejó nombre, ¿qué guarda en cliente_id?", a: "Nada: null. Por eso la columna cliente_id debe permitir null. Si fuera not null, no podrías registrar ventas a clientes anónimos." },
   starter: "Table ventas {\n  id bigint [pk, increment]\n  fecha date\n  forma_pago varchar(10) [note: 'contado | credito']\n  total_usd decimal(16,6)\n  tasa decimal(14,4)\n}\n\n// Agrega clientes, conecta ventas con ellos y crea cobros\n",
@@ -565,56 +762,61 @@ var LEVELS = [
     opt("cobros guarda moneda y tasa (cobro en bolívares)", function (s) { return hasC(s, "cobros", "moneda") && hasC(s, "cobros", "tasa"); }),
     opt("Pusiste note en ventas.cliente_id", function (s) { return anyNote(s, "ventas", ["cliente_id"]); })
   ] },
-{ n: 6, title: "Rómpelo a propósito: el diagrama torcido", who: "El sobrino del dueño de Cairo", max: 100, hc: [10, 20, 30],
-  story: "Quise ayudar con el diagrama y creo que lo dañé. Hay 4 errores escondidos en el código. Mira el diagrama a la derecha: las flechas y las tablas te van a delatar.",
-  predict: { q: "Antes de arreglar nada: ¿qué crees que está mal en el diagrama?", a: "Mira dónde está la pata de gallo de cada flecha, qué tablas no tienen llave primaria, y si alguna flecha apunta a una tabla que no existe. Una palabra mal escrita tampoco se queja, pero te falla después." },
-  starter: "Table clientes {\n  id bigint\n  nombre varchar\n}\n\nTable ventas {\n  id bigint [pk, increment]\n  cliente_id bigint [null]\n  total_usd decimal(16,6)\n}\n\nTable venta_items {\n  id bigint [pk, increment]\n  venta_id bigint\n  producto_id bigint\n  cantidd int\n}\n\nRef: clientes.id > ventas.cliente_id\nRef: venta_items.venta_id > ventas.id\n",
-  hints: ["Mira el diagrama: ¿alguna pata de gallo (N) está en el lado equivocado?",
-          "Los 4 errores son: una tabla sin pk, una relación al revés, una columna mal escrita y una tabla que falta.",
-          "Cambios:\n  clientes.id → [pk, increment]\n  Ref: ventas.cliente_id > clientes.id\n  cantidd → cantidad\n  Table productos { id bigint [pk], nombre varchar }\n  Ref: venta_items.producto_id > productos.id\n"],
+{ n: 7, title: "Jefe final: Cairo completa", who: "Cairo", max: 150, hc: [15, 30, 45],
+  story: "Se me perdió el diagrama de la tienda. Solo me quedaron los modelos de Laravel con sus relaciones (míralos en el código). Reconstruye el MER completo de Cairo: las 10 tablas que creamos en las migraciones. Las que Laravel trae de fábrica (users, sessions, cache, jobs...) no van.",
+  predict: { q: "De las 10 tablas, ¿cuáles son maestros, cuáles documentos y cuáles renglones o pagos? ¿Cuál no se conecta con nadie?", a: "Maestros: productos, proveedores, clientes y tasas. Documentos: compras y ventas. Renglones y pagos: compra_items, venta_items, pagos_proveedor y cobros. La tasa no se conecta: las compras y ventas copian su valor. Cada hasMany/belongsTo de los modelos es una flecha: la llave foránea va en el lado del belongsTo." },
+  starter: "// Los 10 modelos de la clase 3 son tus planos:\n//   Proveedor     hasMany Compra\n//   Compra        belongsTo Proveedor, hasMany CompraItem, hasMany PagoProveedor\n//   CompraItem    belongsTo Compra, belongsTo Producto\n//   PagoProveedor belongsTo Compra\n//   Cliente       hasMany Venta\n//   Venta         belongsTo Cliente, hasMany VentaItem, hasMany Cobro\n//   VentaItem     belongsTo Venta, belongsTo Producto\n//   Cobro         belongsTo Venta\n//   Producto y Tasa: sin relaciones propias\n//\n// Tablas: tasas, productos, proveedores, compras, compra_items,\n//         pagos_proveedor, clientes, ventas, venta_items, cobros\n",
+  hints: ["Empieza por los maestros (productos, proveedores, clientes, tasas), luego los documentos (compras, ventas) y al final sus renglones y pagos. La llave foránea siempre va en la tabla del belongsTo.",
+          "8 relaciones: compras→proveedores, compra_items→compras, compra_items→productos, pagos_proveedor→compras, ventas→clientes (cliente_id acepta null), venta_items→ventas, venta_items→productos, cobros→ventas. Mira tus migraciones de la clase 2 para las columnas.",
+          "productos: id, codigo, nombre, costo_usd, precio_usd, stock, stock_minimo\nproveedores: id, nombre, empresa, telefono, direccion\nclientes: id, nombre, telefono, nota\ntasas: id, fecha, valor, origen\ncompras: id, proveedor_id, fecha, forma_pago, vence, total_usd, tasa\ncompra_items: id, compra_id, producto_id, cantidad, costo_usd\npagos_proveedor: id, compra_id, fecha, monto_usd, metodo, tasa, referencia\nventas: id, cliente_id, fecha, forma_pago, total_usd, tasa\nventa_items: id, venta_id, producto_id, cantidad, precio_usd\ncobros: id, venta_id, fecha, monto_usd, metodo, monto_pagado, moneda, tasa, referencia\n(una columna por línea, el dinero en decimal, y las 8 Ref con >)\n"],
   checks: [
-    { text: "Arreglo 1", run: function (s) { return hasT(s, "clientes") && s.tables.clientes.list.some(function (c) { return c.pk; }) ? true : "Una tabla no tiene llave primaria."; } },
-    { text: "Arreglo 2", run: function (s) {
-      if (s.refs.some(function (r) { return r.many.t === "ventas" && r.many.c === "cliente_id" && r.one.t === "clientes"; })) return true;
-      return "Una flecha apunta al revés: la pata de gallo va en el lado «muchos».";
+    { text: "Solo las tablas de Cairo (sin users, sessions, cache, jobs... de Laravel)", run: function (s) {
+      var bad = LARAVEL.filter(function (t) { return hasT(s, t); });
+      return bad.length ? "Quita las tablas que Laravel crea solo: " + bad.join(", ") + "." : true;
     } },
-    { text: "Arreglo 3", run: function (s) { return hasC(s, "venta_items", "cantidad") ? true : "Hay una columna mal escrita en venta_items."; } },
-    { text: "Arreglo 4", run: function (s) {
-      if (!hasT(s, "productos")) return "venta_items.producto_id apunta a una tabla que no existe.";
-      if (!s.tables.productos.list.some(function (c) { return c.pk; })) return "productos también necesita llave primaria.";
-      return s.refs.some(function (r) { return r.many.t === "venta_items" && r.many.c === "producto_id" && r.one.t === "productos"; }) ? true : "Conecta venta_items.producto_id con productos.";
-    } },
-    opt("productos tiene nombre", function (s) { return hasC(s, "productos", "nombre"); }),
-    opt("productos tiene precio_usd decimal", function (s) { return hasC(s, "productos", "precio_usd") && isDec(col(s, "productos", "precio_usd").type); })
-  ] },
-{ n: 7, title: "Jefe final: la panadería de Doña Rosa", who: "Doña Rosa", max: 150, hc: [15, 30, 45],
-  story: "Hago pedidos de pan por encargo. Cada cliente hace pedidos, cada pedido lleva varios panes, el precio del pan cambia con la harina, y los clientes abonan por partes. Diséñame la base de datos desde cero, usando lo que aprendiste.",
-  predict: { q: "Es el mismo molde de la tienda. ¿Cuál es el «maestro», cuál el «documento» y cuál el «renglón»?", a: "Maestros: clientes y panes. Documento: pedidos. Renglón: pedido_items (une pedidos con panes y congela el precio). Los abonos son como los cobros: muchos pagos por pedido." },
-  starter: "// Tablas: clientes, panes, pedidos, pedido_items, abonos\n",
-  hints: ["Es el mismo molde de la tienda: maestros (clientes, panes), un documento (pedidos) y sus renglones (pedido_items). ¿Qué precio debe congelar el renglón?",
-          "Relaciones: pedidos→clientes, pedido_items→pedidos, pedido_items→panes, abonos→pedidos. pedido_items guarda cantidad y precio_usd.",
-          "Table clientes { id bigint [pk]  nombre varchar }\nTable panes { id bigint [pk]  nombre varchar  precio_usd decimal(16,6) }\nTable pedidos { id bigint [pk]  cliente_id bigint  fecha date  total_usd decimal(16,6) }\nTable pedido_items { id bigint [pk]  pedido_id bigint  pan_id bigint  cantidad int  precio_usd decimal(16,6) }\nTable abonos { id bigint [pk]  pedido_id bigint  fecha date  monto_usd decimal(16,6) }\n(escribe cada columna en su propia línea) y las 4 Ref con >\n"],
-  checks: [
-    tableOk("clientes"), tableOk("panes"), tableOk("pedidos"), tableOk("pedido_items"), tableOk("abonos"),
+    tableOk("tasas"), tableOk("productos"), tableOk("proveedores"), tableOk("clientes"), tableOk("compras"),
+    tableOk("compra_items"), tableOk("pagos_proveedor"), tableOk("ventas"), tableOk("venta_items"), tableOk("cobros"),
+    colsOk("tasas", ["fecha", "valor"]),
+    colsOk("productos", ["codigo", "nombre", "costo_usd", "precio_usd", "stock", "stock_minimo"]),
+    colsOk("proveedores", ["nombre"]),
     colsOk("clientes", ["nombre"]),
-    colsOk("panes", ["nombre", "precio_usd"]),
-    colsOk("pedidos", ["cliente_id", "fecha", "total_usd"]),
-    colsOk("pedido_items", ["pedido_id", "pan_id", "cantidad", "precio_usd"]),
-    colsOk("abonos", ["pedido_id", "fecha", "monto_usd"]),
-    typeOk("panes", "precio_usd", "dec", "El precio del pan es decimal", "Dinero en decimal."),
-    refOk("pedidos", "cliente_id", "clientes"),
-    refOk("pedido_items", "pedido_id", "pedidos"),
-    refOk("pedido_items", "pan_id", "panes"),
-    refOk("abonos", "pedido_id", "pedidos"),
-    noCol("pedidos", "pan_id", "pedidos no debe tener pan_id: los panes van en pedido_items.", "Un pedido no guarda un solo pan (eso va en pedido_items)"),
-    opt("pedidos tiene fecha_entrega", function (s) { return hasC(s, "pedidos", "fecha_entrega"); }),
-    opt("abonos tiene referencia (null) para el número de pago móvil", function (s) { return hasC(s, "abonos", "referencia") && col(s, "abonos", "referencia").null; }),
-    opt("Borrar un pedido borra sus renglones: [delete: cascade]", function (s) { return s.refs.some(function (r) { return r.many.t === "pedido_items" && r.one.t === "pedidos" && r.cascade; }); })
+    colsOk("compras", ["proveedor_id", "fecha", "forma_pago", "vence", "total_usd"]),
+    colsOk("compra_items", ["compra_id", "producto_id", "cantidad", "costo_usd"]),
+    colsOk("pagos_proveedor", ["compra_id", "fecha", "monto_usd", "metodo"]),
+    colsOk("ventas", ["cliente_id", "fecha", "forma_pago", "total_usd"]),
+    colsOk("venta_items", ["venta_id", "producto_id", "cantidad", "precio_usd"]),
+    colsOk("cobros", ["venta_id", "fecha", "monto_usd", "metodo", "monto_pagado", "moneda"]),
+    { text: "Todo el dinero va en decimal (costos, precios, totales, montos)", run: function (s) {
+      var bad = MONEY.filter(function (p) { return hasC(s, p[0], p[1]) && !isDec(col(s, p[0], p[1]).type); });
+      return bad.length ? bad.map(function (p) { return p[0] + "." + p[1]; }).join(", ") + ": el dinero va en decimal." : true;
+    } },
+    refOk("compras", "proveedor_id", "proveedores"),
+    refOk("compra_items", "compra_id", "compras"),
+    refOk("compra_items", "producto_id", "productos"),
+    refOk("pagos_proveedor", "compra_id", "compras"),
+    refOk("ventas", "cliente_id", "clientes"),
+    refOk("venta_items", "venta_id", "ventas"),
+    refOk("venta_items", "producto_id", "productos"),
+    refOk("cobros", "venta_id", "ventas"),
+    { text: "ventas.cliente_id permite null (clientes ocasionales)", run: function (s) {
+      if (!hasC(s, "ventas", "cliente_id")) return "ventas necesita la columna cliente_id.";
+      var c = col(s, "ventas", "cliente_id");
+      return c.null && !c.notnull ? true : "Marca cliente_id con [null].";
+    } },
+    opt("Datos de contacto: proveedores (empresa, telefono, direccion) y clientes (telefono, nota)", function (s) { return hasC(s, "proveedores", "empresa") && hasC(s, "proveedores", "telefono") && hasC(s, "proveedores", "direccion") && hasC(s, "clientes", "telefono") && hasC(s, "clientes", "nota"); }),
+    opt("La tasa congelada en compras, ventas, pagos_proveedor y cobros", function (s) { return ["compras", "ventas", "pagos_proveedor", "cobros"].every(function (t) { return hasC(s, t, "tasa"); }); }),
+    opt("Borrado en cascada en compra_items, pagos_proveedor, venta_items y cobros", function (s) {
+      return [["compra_items", "compras"], ["pagos_proveedor", "compras"], ["venta_items", "ventas"], ["cobros", "ventas"]].every(function (p) {
+        return s.refs.some(function (r) { return r.many.t === p[0] && r.one.t === p[1] && r.cascade; });
+      });
+    }),
+    opt("tasas.fecha es unique y compras.vence acepta null", function (s) { return hasC(s, "tasas", "fecha") && col(s, "tasas", "fecha").unique && hasC(s, "compras", "vence") && col(s, "compras", "vence").null; }),
+    opt("created_at y updated_at en todas las tablas", function (s) { return CAIRO.every(function (t) { return hasC(s, t, "created_at") && hasC(s, t, "updated_at"); }); })
   ] }
 ];
 
 /* ---------- Estado y almacenamiento ---------- */
-var KEY = "taller-mer-v1";
+var KEY = "taller-mer-v2";
 var st = { nick: "", cur: 1, code: {}, hints: {}, fails: {}, best: {}, done: {} };
 try { var raw = localStorage.getItem(KEY); if (raw) Object.assign(st, JSON.parse(raw)); } catch (e) {}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
@@ -653,22 +855,19 @@ function fkSet(s, t) {
   s.refs.forEach(function (r) { if (r.many.t === t) o[r.many.c] = true; });
   return o;
 }
-function renderDiagram(s) {
-  var svg = $("svg"), canvas = $("canvas");
+function tableH(s, n) { return HH + Math.max(1, s.tables[n].list.length) * RH + 8; }
+function buildDiagram(s, W, ov) {
   var names = s.order;
-  $("empty").hidden = names.length > 0;
-  if (!names.length) { svg.innerHTML = ""; svg.setAttribute("width", 10); svg.setAttribute("height", 10); return; }
-  var W = canvas.clientWidth || 600;
   var cols = Math.max(1, Math.floor((W - 24 + GX) / (CW + GX)));
   var pos = {}, y = 20, rowMax = 0;
-  var hgt = function (n) { return HH + Math.max(1, s.tables[n].list.length) * RH + 8; };
+  var hgt = function (n) { return tableH(s, n); };
   names.forEach(function (n, i) {
     var c = i % cols;
     if (c === 0 && i > 0) { y += rowMax + GY; rowMax = 0; }
     pos[n] = { x: 20 + c * (CW + GX), y: y };
     rowMax = Math.max(rowMax, hgt(n));
   });
-  var ov = drag[st.cur] || {};
+  ov = ov || {};
   names.forEach(function (n) { if (ov[n]) pos[n] = ov[n]; });
   var maxX = 0, maxY = 0;
   names.forEach(function (n) { maxX = Math.max(maxX, pos[n].x + CW + 90); maxY = Math.max(maxY, pos[n].y + hgt(n) + 30); });
@@ -708,9 +907,32 @@ function renderDiagram(s) {
     });
     h += "</g>";
   });
-  svg.setAttribute("width", maxX);
-  svg.setAttribute("height", maxY);
-  svg.innerHTML = h;
+  return { html: h, w: maxX, h: maxY };
+}
+function renderDiagram(s) {
+  var svg = $("svg"), canvas = $("canvas");
+  $("empty").hidden = s.order.length > 0;
+  if (!s.order.length) { svg.innerHTML = ""; svg.setAttribute("width", 10); svg.setAttribute("height", 10); return; }
+  var d = buildDiagram(s, canvas.clientWidth || 600, drag[st.cur]);
+  svg.setAttribute("width", d.w);
+  svg.setAttribute("height", d.h);
+  svg.innerHTML = d.html;
+}
+
+/* ---------- Relaciones en palabras ---------- */
+function sing(n) {
+  if (n === "pagos_proveedor") return "pago_proveedor";
+  if (/ores$/.test(n)) return n.slice(0, -2);
+  return /s$/.test(n) ? n.slice(0, -1) : n;
+}
+function relsHtml(s) {
+  if (!s.refs.length) return '<li class="none">Cuando conectes tablas con Ref, aquí leerás cuántos hay de cada lado: 1 → N.</li>';
+  return s.refs.map(function (r) {
+    var c = s.tables[r.many.t] && s.tables[r.many.t].cols[r.many.c];
+    var opc = c && c.null ? " <em>· opcional: puede quedar vacío</em>" : "";
+    var cas = r.cascade ? " <em>· si se borra, se borran sus " + esc(r.many.t) + "</em>" : "";
+    return "<li><b>1</b> " + esc(sing(r.one.t)) + " → <b>N</b> " + esc(r.many.t) + opc + cas + "<code>" + esc(r.many.t + "." + r.many.c + " → " + r.one.t + "." + r.one.c) + "</code></li>";
+  }).join("");
 }
 
 /* ---------- Editor ---------- */
@@ -721,6 +943,7 @@ function refresh() {
   syncScroll();
   parsed = parse(code.value);
   renderDiagram(parsed);
+  $("rels").innerHTML = relsHtml(parsed);
   var s = parsed, el = $("status");
   if (s.errors.length) { el.className = "status bad"; el.textContent = s.errors[0].msg; }
   else {
@@ -847,7 +1070,7 @@ function check() {
   if (score > prev) st.best[L.n] = score;
   st.done[L.n] = true; save();
   showWin(L, { base: L.max, hc: hc, fails: fails, bonus: bonus, nohint: nohint, score: score, prev: prev, first: first });
-  renderLevels(); updateHud(); pushScore(); confetti();
+  renderLevels(); updateHud(); updateLootTab(); pushScore(); confetti();
 }
 function showWin(L, r) {
   var h = "<h3>¡Misión cumplida!</h3><ul class=\"break\">";
@@ -861,12 +1084,14 @@ function showWin(L, r) {
   var next = LEVELS[L.n];
   h += '<div class="actions">';
   if (next) h += '<button class="btn primary" id="btn-next">Siguiente misión</button>';
-  else h += "<p><b>Terminaste el taller completo.</b> Mira tu lugar en el ranking.</p>";
+  else h += "<p><b>Venciste al jefe.</b> TRONS dejó un botín para ti: el diagrama completo de Cairo.</p>";
+  if (!next) h += '<button class="btn primary" id="btn-toloot">🎁 Abrir el botín</button>';
   h += '<button class="btn" id="btn-torank">Ver ranking</button></div>';
   var w = $("win"); w.innerHTML = h; w.hidden = false;
   w.scrollIntoView({ behavior: "smooth", block: "nearest" });
   var bn = $("btn-next"); if (bn) bn.onclick = function () { loadLevel(L.n + 1); window.scrollTo({ top: 0, behavior: "smooth" }); };
   $("btn-torank").onclick = function () { showTab("rank"); };
+  var bl = $("btn-toloot"); if (bl) bl.onclick = function () { showTab("loot"); window.scrollTo({ top: 0, behavior: "smooth" }); };
 }
 $("btn-check").onclick = check;
 $("btn-hint").onclick = function () {
@@ -889,14 +1114,92 @@ $("btn-reset").onclick = function () {
 /* ---------- Puntaje, pestañas y confeti ---------- */
 function updateHud() { $("total").textContent = total(); }
 function showTab(which) {
-  var rank = which === "rank";
-  $("view-play").hidden = rank; $("view-rank").hidden = !rank;
-  $("tab-play").setAttribute("aria-selected", String(!rank));
-  $("tab-rank").setAttribute("aria-selected", String(rank));
-  if (!rank) refresh();
+  if (which === "loot" && !st.done[LEVELS.length]) which = "play";
+  $("view-play").hidden = which !== "play"; $("view-rank").hidden = which !== "rank"; $("view-loot").hidden = which !== "loot";
+  ["play", "rank", "loot"].forEach(function (k) { $("tab-" + k).setAttribute("aria-selected", String(k === which)); });
+  if (which === "play") refresh();
+  if (which === "loot") renderLoot();
 }
+function updateLootTab() { $("tab-loot").hidden = !st.done[LEVELS.length]; }
 $("tab-play").onclick = function () { showTab("play"); };
 $("tab-rank").onclick = function () { showTab("rank"); };
+$("tab-loot").onclick = function () { showTab("loot"); };
+
+/* ---------- Botín: el MER oficial de Cairo ---------- */
+var LOOT_COLS = [["proveedores", "compras", "pagos_proveedor"], ["compra_items", "productos", "venta_items"], ["tasas", "clientes", "ventas", "cobros"]];
+var lootParsed = parse(OFICIAL);
+function lootPositions(s) {
+  var pos = {};
+  LOOT_COLS.forEach(function (colm, i) {
+    var y = 20;
+    colm.forEach(function (n) { pos[n] = { x: 20 + i * (CW + 120), y: y }; y += tableH(s, n) + GY; });
+  });
+  return pos;
+}
+function renderLoot() {
+  var s = lootParsed, d = buildDiagram(s, 900, lootPositions(s)), svg = $("svg-loot");
+  svg.setAttribute("width", d.w); svg.setAttribute("height", d.h); svg.innerHTML = d.html;
+  $("rels-loot").innerHTML = relsHtml(s);
+  $("loot-code").value = OFICIAL;
+}
+function lootMsg(t, bad) { var el = $("loot-status"); el.className = "status " + (bad ? "bad" : "good"); el.textContent = t; }
+function saveBlob(blob, name) {
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+}
+/* El SVG usa variables CSS: se copian los estilos ya calculados para que la imagen se vea igual fuera de la página */
+function standaloneSvg() {
+  var src = $("svg-loot"), clone = src.cloneNode(true);
+  var a = src.querySelectorAll("*"), b = clone.querySelectorAll("*");
+  var props = ["fill", "stroke", "stroke-width", "font-family", "font-size", "font-weight"];
+  for (var i = 0; i < a.length; i++) {
+    var cs = getComputedStyle(a[i]);
+    props.forEach(function (p) { b[i].style.setProperty(p, cs.getPropertyValue(p)); });
+  }
+  var w = +src.getAttribute("width"), h = +src.getAttribute("height");
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("viewBox", "0 0 " + w + " " + h);
+  var bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  bg.setAttribute("width", w); bg.setAttribute("height", h);
+  bg.setAttribute("fill", getComputedStyle($("canvas-loot")).backgroundColor);
+  clone.insertBefore(bg, clone.firstChild);
+  return { text: new XMLSerializer().serializeToString(clone), w: w, h: h };
+}
+$("loot-dbml").onclick = function () {
+  try { saveBlob(new Blob([OFICIAL], { type: "text/plain;charset=utf-8" }), "tienda.dbml"); lootMsg("Listo: tienda.dbml se descargó."); }
+  catch (e) { lootMsg("No pude descargar. Abre «Ver el código DBML oficial» y copia desde ahí.", true); }
+};
+$("loot-svg").onclick = function () {
+  try { saveBlob(new Blob([standaloneSvg().text], { type: "image/svg+xml;charset=utf-8" }), "cairo-mer.svg"); lootMsg("Listo: cairo-mer.svg se descargó."); }
+  catch (e) { lootMsg("No pude descargar el SVG en este navegador.", true); }
+};
+$("loot-png").onclick = function () {
+  try {
+    var sv = standaloneSvg(), img = new Image();
+    img.onload = function () {
+      var cv = document.createElement("canvas"), k = 2;
+      cv.width = sv.w * k; cv.height = sv.h * k;
+      var ctx = cv.getContext("2d"); ctx.scale(k, k); ctx.drawImage(img, 0, 0);
+      cv.toBlob(function (blob) {
+        if (!blob) { lootMsg("No pude crear la imagen. Prueba con el SVG.", true); return; }
+        saveBlob(blob, "cairo-mer.png"); lootMsg("Listo: cairo-mer.png se descargó.");
+      });
+    };
+    img.onerror = function () { lootMsg("No pude crear la imagen. Prueba con el SVG.", true); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(sv.text);
+  } catch (e) { lootMsg("No pude crear la imagen en este navegador.", true); }
+};
+$("loot-copy").onclick = function () {
+  function fallback() {
+    var ta = $("loot-code"); ta.closest("details").open = true; ta.focus(); ta.select();
+    var ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+    lootMsg(ok ? "Código copiado." : "Selecciona el código de abajo y cópialo con Ctrl+C.", !ok);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(OFICIAL).then(function () { lootMsg("Código copiado. Pégalo en dbdiagram.io."); }, fallback);
+  else fallback();
+};
 function confetti() {
   var box = $("confetti"), colors = ["var(--accent)", "var(--blue)", "var(--good)", "var(--bad)"];
   for (var i = 0; i < 40; i++) {
@@ -1088,7 +1391,7 @@ document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !i
 /* ---------- Arranque ---------- */
 var firstOpen = LEVELS.find(function (L) { return !st.done[L.n]; });
 if (!(st.cur >= 1 && st.cur <= LEVELS.length) || !unlocked(st.cur)) st.cur = firstOpen ? firstOpen.n : 1;
-updateHud(); renderRank();
+updateHud(); updateLootTab(); renderRank();
 loadLevel(st.cur);
 if (!st.seen) showGate();
 window.addEventListener("resize", function () { clearTimeout(timer); timer = setTimeout(function () { renderDiagram(parsed); }, 150); });
